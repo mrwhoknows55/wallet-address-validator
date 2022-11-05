@@ -1,0 +1,42 @@
+name: Gradle Build And Tests
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    - main
+
+jobs:
+  build:
+    name: Check Build And Run Tests
+    runs-on: ubuntu-latest
+
+  steps:
+    - uses: actions/checkout@v1
+
+    - name: Setup JDK
+      uses: actions/setup-java@v1
+      with:
+        java-version: '11'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v2
+
+    - name: Setup Gradle Cache
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-${{ hashFiles('**/*.gradle*') }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}-${{ hashFiles('**/buildSrc/**/*.kt') }}
+
+    - name: Make gradlew executable
+      run: chmod +x ./gradlew
+
+    - name: Run Gradle Build
+      run: ./gradlew build --stacktrace
+
+    - name: Run Unit Tests
+      run: ./gradlew testDebugUnitTest
