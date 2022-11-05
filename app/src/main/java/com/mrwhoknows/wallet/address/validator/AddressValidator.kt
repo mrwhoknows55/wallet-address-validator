@@ -10,3 +10,9 @@ class BTCAddressValidator : AddressValidator {
         return pattern.matches(address)
     }
 }
+
+class ETHAddressValidator : AddressValidator {
+    override fun validateAddress(address: String): Boolean {
+        return "0x[a-fA-F0-9]{40}".toRegex().matches(address)
+    }
+}
