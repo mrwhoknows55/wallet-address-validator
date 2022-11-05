@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Wallet Address Validator</string>
+    <string name="btc">BTC</string>
+    <string name="eth">ETH</string>
 </resources>

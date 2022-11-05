@@ -9,6 +9,7 @@ import com.mrwhoknows.wallet.address.validator.databinding.FragmentValidationBin
 
 class ValidationFragment : Fragment() {
     private lateinit var binding: FragmentValidationBinding
+    private val addressType: String by lazy { requireArguments().getString(ADDRESS_TYPE, BTC) }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -17,5 +18,16 @@ class ValidationFragment : Fragment() {
     ): View {
         binding = FragmentValidationBinding.inflate(inflater, container, false)
         return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding.text.text = "Address Type: $addressType"
+    }
+
+    companion object {
+        const val ADDRESS_TYPE = "addressType"
+        const val BTC = "btc"
+        const val ETH = "eth"
     }
 }
