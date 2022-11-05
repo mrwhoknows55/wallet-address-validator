@@ -2,4 +2,6 @@
     <string name="app_name">Wallet Address Validator</string>
     <string name="btc">BTC</string>
     <string name="eth">ETH</string>
+    <string name="validate">Validate</string>
+    <string name="share">Share</string>
 </resources>
