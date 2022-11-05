@@ -4,4 +4,8 @@
     <string name="eth">ETH</string>
     <string name="validate">Validate</string>
     <string name="share">Share</string>
+    <string name="permission_required">Permissions Required</string>
+    <string name="rationale_msg">Inorder to scan the QR code app requires Camera permission, Please allow the permission from settings</string>
+    <string name="ok">OK</string>
+    <string name="return_to_home">Return to home</string>
 </resources>
