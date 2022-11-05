@@ -1,4 +1,4 @@
-package com.mrwhoknows.wallet.address.validator
+package com.mrwhoknows.wallet.address.validator.ui
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
