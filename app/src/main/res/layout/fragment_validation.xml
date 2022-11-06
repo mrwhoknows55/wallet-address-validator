@@ -18,14 +18,30 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvAddress"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:textSize="16sp"
+        android:gravity="center"
+        android:maxLines="3"
+        android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="@+id/ivQRCode"
         app:layout_constraintStart_toStartOf="@+id/ivQRCode"
         app:layout_constraintTop_toBottomOf="@+id/ivQRCode"
         tools:text="Address: 121212" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvValidInvalid"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="@+id/tvAddress"
+        app:layout_constraintStart_toStartOf="@+id/tvAddress"
+        app:layout_constraintTop_toBottomOf="@+id/tvAddress"
+        tools:text="@string/valid_address"
+        tools:visibility="visible" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnShare"

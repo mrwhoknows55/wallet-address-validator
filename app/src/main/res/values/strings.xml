@@ -5,7 +5,12 @@
     <string name="validate">Validate</string>
     <string name="share">Share</string>
     <string name="permission_required">Permissions Required</string>
-    <string name="rationale_msg">Inorder to scan the QR code app requires Camera permission, Please allow the permission from settings</string>
+    <string name="camera_rationale_msg">Inorder to scan the QR code, app requires Camera permission, Please allow the permission from settings</string>
+    <string name="storage_rationale_msg">Inorder to share the QR code, app requires Storage permission, Please allow the permission from settings</string>
     <string name="ok">OK</string>
     <string name="return_to_home">Return to home</string>
+    <string name="share_qr_description">Share Address QR Codee</string>
+    <string name="valid_address">Valid address</string>
+    <string name="invalid_address">Invalid address</string>
+    <string name="scanned_address">"Scanned Address\n%1$s"</string>
 </resources>

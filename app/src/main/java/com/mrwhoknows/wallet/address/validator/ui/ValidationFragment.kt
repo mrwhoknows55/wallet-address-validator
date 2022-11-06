@@ -38,13 +38,9 @@ class ValidationFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewModel.setAddressType(addressType)
+        checkAndAskCameraPermission()
         setupObservables()
         setupClickListeners()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        checkAndAskCameraPermission()
     }
 
     private fun setupClickListeners() {
@@ -53,8 +49,12 @@ class ValidationFragment : Fragment() {
         }
 
         binding.btnShare.setOnClickListener {
-            Toast.makeText(requireContext(), "on share clicked", Toast.LENGTH_SHORT).show()
+            checkAndAskExternalPermission()
         }
+    }
+
+    private fun onShareQrCodeImage() {
+        viewModel.getBitmapFromView(requireContext().contentResolver, QR_DIR)
     }
 
     private fun setupObservables() {
@@ -66,15 +66,50 @@ class ValidationFragment : Fragment() {
 
         viewModel.addressValue.observe(viewLifecycleOwner) { address ->
             address?.let {
-                binding.tvAddress.text = it
+                binding.tvAddress.text = getString(R.string.scanned_address, it)
+            } ?: kotlin.run {
+                binding.tvValidInvalid.visibility = View.GONE
             }
         }
 
         viewModel.isValidAddress.observe(viewLifecycleOwner) { isValid ->
-            if (isValid) {
-                binding.btnShare.visibility = View.VISIBLE
-            } else {
-                binding.btnShare.visibility = View.GONE
+            updateValidTextUi(isValid)
+        }
+
+        viewModel.errorMsg.observe(viewLifecycleOwner) { err ->
+            err?.let {
+                showLongToast(it)
+                navigateBack()
+            }
+        }
+
+        viewModel.imageUri.observe(viewLifecycleOwner) {
+            val intent = Intent(Intent.ACTION_SEND)
+            intent.type = IMAGE_MIME
+            intent.putExtra(Intent.EXTRA_STREAM, it)
+            intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+            startActivity(Intent.createChooser(intent, getString(R.string.share_qr_description)))
+        }
+    }
+
+    private fun updateValidTextUi(isValid: Boolean) {
+        if (isValid) {
+            val green = ContextCompat.getColor(requireContext(), R.color.green)
+            binding.btnShare.visibility = View.VISIBLE
+            binding.tvAddress.setTextColor(green)
+            binding.tvValidInvalid.apply {
+                text = getString(R.string.valid_address)
+                visibility = View.VISIBLE
+                setTextColor(green)
+            }
+        } else {
+            val red = ContextCompat.getColor(requireContext(), R.color.red)
+            binding.btnShare.visibility = View.GONE
+            binding.tvAddress.setTextColor(red)
+            binding.tvValidInvalid.apply {
+                text = getString(R.string.invalid_address)
+                visibility = View.VISIBLE
+                setTextColor(red)
             }
         }
     }
@@ -85,14 +120,14 @@ class ValidationFragment : Fragment() {
         setBeepEnabled(false)
         setOrientationLocked(true)
         setBarcodeImageEnabled(true)
-        setPrompt("Scan a ${addressType.uppercase()} address QR Code")
+        setPrompt("Scan ${addressType.uppercase()} address QR Code")
     }
 
     private val qrCodeScannerLauncher = registerForActivityResult(
         ScanContract()
     ) { result: ScanIntentResult ->
         result.contents?.let {
-            viewModel.createQRCodeBitmap(result.contents)
+            viewModel.createQRCodeBitmap(it)
         } ?: kotlin.run {
             navigateBack()
         }
@@ -103,6 +138,39 @@ class ValidationFragment : Fragment() {
     ) { isGranted: Boolean ->
         if (isGranted) {
             qrCodeScannerLauncher.launch(getQrScanOptions())
+        } else {
+            checkAndAskCameraPermission()
+        }
+    }
+
+    private val storageRequestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            onShareQrCodeImage()
+        } else {
+            checkAndAskExternalPermission()
+        }
+    }
+
+    private fun checkAndAskExternalPermission() {
+        when {
+            ContextCompat.checkSelfPermission(
+                requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                onShareQrCodeImage()
+            }
+            ActivityCompat.shouldShowRequestPermissionRationale(
+                requireActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) -> {
+                showPermissionRationaleDialog(getString(R.string.storage_rationale_msg))
+            }
+
+            else -> {
+                storageRequestPermissionLauncher.launch(
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                )
+            }
         }
     }
 
@@ -117,40 +185,27 @@ class ValidationFragment : Fragment() {
             ActivityCompat.shouldShowRequestPermissionRationale(
                 requireActivity(), Manifest.permission.CAMERA
             ) -> {
-                showPermissionRationaleDialog(false)
-            }
-
-            ContextCompat.checkSelfPermission(
-                requireContext(), Manifest.permission.CAMERA
-            ) == PackageManager.PERMISSION_DENIED -> {
-                showPermissionRationaleDialog(true)
+                showPermissionRationaleDialog(getString(R.string.camera_rationale_msg))
             }
 
             else -> {
                 requestPermissionLauncher.launch(
-                    Manifest.permission.CAMERA
+                    Manifest.permission.CAMERA,
                 )
             }
         }
     }
 
-    private fun showPermissionRationaleDialog(deniedAlways: Boolean) {
+    private fun showPermissionRationaleDialog(rationaleMsg: String) {
         MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.permission_required)
-            .setMessage(R.string.rationale_msg).setCancelable(false)
-            .setPositiveButton(R.string.ok) { _, _ ->
-                if (!deniedAlways) {
-                    requestPermissionLauncher.launch(
-                        Manifest.permission.CAMERA
-                    )
-                } else {
-                    Intent(
-                        ACTION_APPLICATION_DETAILS_SETTINGS,
-                        Uri.parse("package:${requireActivity().packageName}")
-                    ).apply {
-                        addCategory(Intent.CATEGORY_DEFAULT)
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        startActivity(this)
-                    }
+            .setMessage(rationaleMsg).setCancelable(false).setPositiveButton(R.string.ok) { _, _ ->
+                Intent(
+                    ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.parse("package:${requireActivity().packageName}")
+                ).apply {
+                    addCategory(Intent.CATEGORY_DEFAULT)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(this)
                 }
             }.setNegativeButton(R.string.return_to_home) { _, _ ->
                 navigateBack()
@@ -162,8 +217,14 @@ class ValidationFragment : Fragment() {
     }
 
     companion object {
+        const val IMAGE_MIME = "image/*"
         const val ADDRESS_TYPE = "addressType"
+        const val QR_DIR = "WalletAddressValidator"
         const val BTC = "btc"
         const val ETH = "eth"
     }
+}
+
+fun Fragment.showLongToast(msg: String) {
+    Toast.makeText(this.requireContext(), msg, Toast.LENGTH_LONG).show()
 }
