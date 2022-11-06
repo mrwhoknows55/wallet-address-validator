@@ -87,7 +87,7 @@ class ValidationFragment : Fragment() {
             val intent = Intent(Intent.ACTION_SEND)
             intent.type = IMAGE_MIME
             intent.putExtra(Intent.EXTRA_STREAM, it)
-            intent.putExtra(Intent.EXTRA_TEXT, viewModel.addressValue.value?: "")
+            intent.putExtra(Intent.EXTRA_TEXT, viewModel.addressValue.value ?: "")
             intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
             startActivity(Intent.createChooser(intent, getString(R.string.share_qr_description)))
         }
@@ -197,6 +197,15 @@ class ValidationFragment : Fragment() {
         }
     }
 
+    private var isFromSettings = false
+    override fun onResume() {
+        super.onResume()
+        if (isFromSettings) {
+            checkAndAskCameraPermission()
+            isFromSettings = false
+        }
+    }
+
     private fun showPermissionRationaleDialog(rationaleMsg: String) {
         MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.permission_required)
             .setMessage(rationaleMsg).setCancelable(false).setPositiveButton(R.string.ok) { _, _ ->
@@ -204,6 +213,7 @@ class ValidationFragment : Fragment() {
                     ACTION_APPLICATION_DETAILS_SETTINGS,
                     Uri.parse("package:${requireActivity().packageName}")
                 ).apply {
+                    isFromSettings = true
                     addCategory(Intent.CATEGORY_DEFAULT)
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     startActivity(this)
