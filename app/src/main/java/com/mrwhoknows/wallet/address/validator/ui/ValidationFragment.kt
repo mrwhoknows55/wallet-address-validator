@@ -87,6 +87,7 @@ class ValidationFragment : Fragment() {
             val intent = Intent(Intent.ACTION_SEND)
             intent.type = IMAGE_MIME
             intent.putExtra(Intent.EXTRA_STREAM, it)
+            intent.putExtra(Intent.EXTRA_TEXT, viewModel.addressValue.value?: "")
             intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
             startActivity(Intent.createChooser(intent, getString(R.string.share_qr_description)))
         }
